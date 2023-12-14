@@ -278,6 +278,7 @@ export class FlowController {
       for (const cpf of idUsersToNotify) {
         const user = await axios.get(
           `${process.env.USER_URL_API}/${cpf}/unit/${idUnit}`,
+          { headers: { Authorization: req.headers.authorization } },
         );
 
         if (!user.data) {
@@ -354,6 +355,7 @@ export class FlowController {
         for (const cpf of idUsersToNotify) {
           const user = await axios.get(
             `${process.env.USER_URL_API}/${cpf}/unit/${idUnit}`,
+            { headers: { Authorization: req.headers.authorization } },
           );
 
           if (!user.data) {
