@@ -414,8 +414,6 @@ export class ProcessesFileService {
           headerIndexes.prioritiesHeaderIndex = prioritesIndex;
         }
 
-        const resultingSheetWorkbooks = [];
-
         for (const worksheet of workbook) {
           const sheetDataArray = worksheet.data.slice(headerIndex + 1);
           const sheetDataMap = new Map();
@@ -567,53 +565,7 @@ export class ProcessesFileService {
             Object.assign(fileItem, { status });
           }
 
-          const resultingSheetData = [
-            [...worksheet.data[headerIndex], 'Resultado', 'Mensagens'],
-            ...worksheet.data.slice(headerIndex + 1),
-          ];
-          resultingSheetWorkbooks.push({
-            name: worksheet.name,
-            data: resultingSheetData,
-          });
-          const initialIndex = headerIndex + 1;
-          processesFileItems.forEach((processesFileItem, i) => {
-            const currentRow = resultingSheetData[initialIndex + i];
-            let aux = 0;
-            while (aux < worksheet.data[headerIndex].length) {
-              if (!currentRow[aux]) currentRow.splice(aux, 1, undefined);
-              aux++;
-            }
-            const status = {
-              imported: { content: 'IMPORTADO', color: '34eb4c' },
-              error: { content: 'ERRO', color: 'd62d2d' },
-            }[processesFileItem.status];
-            currentRow.splice(worksheet.data[headerIndex].length, 0, {
-              v: status.content,
-              s: { font: { color: { rgb: status.color } } },
-            });
-            currentRow.splice(worksheet.data[headerIndex].length + 1, 0, {
-              v: processesFileItem.message || '-',
-              s: { alignment: { wrapText: true } },
-            });
-          });
-
           const processesAuds = [];
-
-          const wb = XLSX.utils.book_new();
-
-          for (const sheet of resultingSheetWorkbooks) {
-            const ws = XLSX.utils.aoa_to_sheet(sheet.data);
-
-            const maxContentLengths = this.findMaxContentLengthPerColumn(
-              sheet.data,
-            );
-
-            ws['!cols'] = maxContentLengths.map(maxLength => ({
-              wch: maxLength,
-            }));
-
-            XLSX.utils.book_append_sheet(wb, ws, sheet.name);
-          }
 
           await sequelizeConfig.transaction(async transaction => {
             const processesResponse = await models.Process.bulkCreate(
@@ -655,20 +607,6 @@ export class ProcessesFileService {
               { where: { idProcessesFile: file.idProcessesFile } },
               { transaction, returning: false, logging: false },
             );
-
-            const outputFile = XLSX.write(wb, {
-              type: 'buffer',
-              bookType: 'xlsx',
-            });
-
-            await this.repository.update(
-              { dataResultingFile: Buffer.from(outputFile) },
-              {
-                where: { idProcessesFile: file.idProcessesFile },
-                transaction,
-                returning: false,
-              },
-            );
           });
         }
       } catch (error) {
@@ -678,7 +616,6 @@ export class ProcessesFileService {
             status: 'error',
             message: error.message,
             importedAt: null,
-            dataResultingFile: null,
           },
           {
             where: { idProcessesFile: file.idProcessesFile },

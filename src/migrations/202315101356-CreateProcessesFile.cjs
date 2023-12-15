@@ -47,10 +47,6 @@ module.exports = {
         type: Sequelize.BLOB,
         allowNull: false,
       },
-      dataResultingFile: {
-        type: Sequelize.BLOB,
-        allowNull: true,
-      },
     });
   },
 
