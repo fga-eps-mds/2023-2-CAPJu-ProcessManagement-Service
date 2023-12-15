@@ -63,8 +63,6 @@ class ProcessService {
           : {};
     }
 
-    console.log('jkdkjsd', flowStages);
-
     if (!flowStages.length) {
       return res.status(404).json({ error: 'Não há etapas neste fluxo' });
     }
@@ -89,6 +87,8 @@ class ProcessService {
     Object.keys(newData).forEach(
       k => originalProcess[k] === newData[k] && delete newData[k],
     );
+
+    if (Object.keys(newData).length === 0) return true;
 
     return await this.executeUpdateQuery(idProcess, newData, req);
   }
