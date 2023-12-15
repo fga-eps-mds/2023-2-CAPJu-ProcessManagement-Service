@@ -68,7 +68,7 @@ export class ProcessesFileService {
         'createdAt',
         [
           literal(`(
-        SELECT COUNT(*)
+        SELECT CAST(COUNT(*) AS INTEGER)
         FROM "processesFileItem"
         WHERE
           "processesFileItem"."idProcessesFile" = "ProcessesFileModel"."idProcessesFile"
@@ -77,17 +77,17 @@ export class ProcessesFileService {
         ],
         [
           literal(`(
-        SELECT COUNT(*)
+        SELECT CAST(COUNT(*) AS INTEGER)
         FROM "processesFileItem"
         WHERE
           "processesFileItem"."idProcessesFile" = "ProcessesFileModel"."idProcessesFile" AND
           "processesFileItem"."status" = 'error'
       )`),
-          'errorItemCount',
+          'errorItemsCount',
         ],
         [
           literal(`(
-        SELECT COUNT(*)
+        SELECT CAST(COUNT(*) AS INTEGER)
         FROM "processesFileItem"
         WHERE
           "processesFileItem"."idProcessesFile" = "ProcessesFileModel"."idProcessesFile" AND

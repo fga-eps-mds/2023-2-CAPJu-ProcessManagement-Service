@@ -10,6 +10,6 @@ StageRoutes.get(
 );
 StageRoutes.post('/newStage', controllers.stageController.store);
 StageRoutes.delete('/deleteStage/:idStage', controllers.stageController.delete);
-StageRoutes.put('/updateStage', controllers.stageController.update);
+StageRoutes.put('/updateStage/:idStage', controllers.stageController.update);
 
 export default StageRoutes;
