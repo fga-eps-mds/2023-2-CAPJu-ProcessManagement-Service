@@ -6,6 +6,11 @@ const controller = controllers.processesFileController;
 ProcessesFileRoutes.get('/findAllPaged', controller.findAllPaged);
 
 ProcessesFileRoutes.get('/findAllItemsPaged', controller.findAllItemsPaged);
+ProcessesFileRoutes.get(
+  '/generateResultingFile/:idProcessesFile',
+  controller.generateResultingFile,
+);
+
 ProcessesFileRoutes.post('/newFile', controller.create);
 ProcessesFileRoutes.delete(
   '/deleteFile/:idProcessesFile',

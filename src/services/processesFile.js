@@ -1,4 +1,4 @@
-import { Op, literal } from 'sequelize';
+import { literal, Op } from 'sequelize';
 import xlsx from 'node-xlsx';
 import XLSX from 'xlsx-js-style';
 import models from '../models/_index.js';
@@ -11,6 +11,7 @@ import { convertCsvToXlsx } from '@aternus/csv-to-xlsx';
 import { logger } from '../utils/logger.js';
 import sequelizeConfig from '../config/sequelize.js';
 import { v4 as uuidv4 } from 'uuid';
+import { formatDateTimeToBrazilian } from '../utils/date.js';
 
 const validProcessesHeader = [
   'Número processo',
@@ -205,6 +206,112 @@ export class ProcessesFileService {
     return await this.repository.destroy({
       where: { idProcessesFile },
     });
+  };
+
+  generateResultingFile = async idProcessesFile => {
+    const fileInfo = await this.repository.findOne({
+      where: { idProcessesFile },
+      attributes: ['name', 'importedAt'],
+      raw: true,
+    });
+    const fileItems = await this.processesFileItemRepository.findAll({
+      where: { idProcessesFile },
+      attributes: {
+        exclude: ['idProcessesFileItem', 'idProcessesFile', 'idProcess'],
+      },
+      raw: true,
+    });
+
+    let quantityWithError = 0;
+    let quantityImported = 0;
+
+    const statusStyleObj = {
+      imported: 'IMPORTADO',
+      error: 'ERRO',
+      manuallyImported: 'IMPORTADO MANUALMENTE',
+    };
+
+    const fileItemsAsArrayOfArrays = fileItems.map(fileItem => {
+      if (fileItem.status !== 'error') quantityImported++;
+      else quantityWithError++;
+      return [
+        fileItem.record || '-',
+        fileItem.nickname || '-',
+        fileItem.flow || '-',
+        fileItem.priority || '-',
+        statusStyleObj[fileItem.status],
+        fileItem.message || '-',
+      ];
+    });
+
+    const resultingSheetData = [
+      [
+        {
+          v: `RESULTADO IMPORTAÇÃO\n\nLote: ${
+            fileInfo.name
+          }\nData Importação: ${formatDateTimeToBrazilian(
+            fileInfo.importedAt,
+          )}\nImportados: ${quantityImported}\nErro: ${quantityWithError}`,
+          t: 's',
+          s: { alignment: { wrapText: true, horizontal: 'center' } },
+        },
+      ],
+      [
+        'Número do Processo',
+        'Apelido',
+        'Fluxo',
+        'Prioridade',
+        'Status',
+        'Mensagens',
+      ],
+      ...fileItemsAsArrayOfArrays,
+    ];
+
+    const wb = XLSX.utils.book_new();
+
+    const ws = XLSX.utils.aoa_to_sheet(resultingSheetData);
+
+    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+
+    ws['!rows'] = [{ hpt: 90 }];
+
+    fileItemsAsArrayOfArrays.forEach((fileItem, rowIndex) => {
+      const messageCellRef = XLSX.utils.encode_cell({ r: rowIndex + 2, c: 5 });
+
+      if (!ws[messageCellRef]) ws[messageCellRef] = {};
+      ws[messageCellRef].v = fileItem[5].replace(/\\n/g, '\n');
+      ws[messageCellRef].s = {
+        alignment: { wrapText: true },
+      };
+
+      const statusCellRef = XLSX.utils.encode_cell({ r: rowIndex + 2, c: 4 });
+      if (!ws[statusCellRef]) ws[statusCellRef] = {};
+      ws[statusCellRef].s = {
+        font: {
+          color: {
+            rgb: fileItem[4] === statusStyleObj.error ? 'd62d2d' : '34eb4c',
+          },
+        },
+      };
+    });
+
+    const maxContentLengths =
+      this.findMaxContentLengthPerColumn(resultingSheetData);
+
+    console.log(maxContentLengths);
+
+    ws['!cols'] = maxContentLengths.map(maxLength => ({
+      wch: maxLength + 5,
+    }));
+
+    XLSX.utils.book_append_sheet(wb, ws, 'RESULTADO');
+
+    const outputFile = XLSX.write(wb, {
+      type: 'buffer',
+      bookType: 'xlsx',
+    });
+
+    return outputFile;
   };
 
   imporFilesJob = async () => {
