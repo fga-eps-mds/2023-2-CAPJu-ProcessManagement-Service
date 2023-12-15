@@ -69,10 +69,10 @@ export class ProcessesFileController {
 
       const newData = req.body;
 
-      await this.processesFileService.updateFileItem(
-        idProcessesFileItem,
-        newData,
-      );
+      await this.processesFileService.updateFileItem(idProcessesFileItem, {
+        ...newData,
+        message: null,
+      });
 
       return res.status(200).json({ idProcessesFileItem });
     } catch (error) {
