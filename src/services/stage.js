@@ -30,7 +30,6 @@ class StageService {
   }
 
   async deleteStage(idStage) {
-    console.log(idStage);
     return this.stage.destroy({ where: { idStage } });
   }
 

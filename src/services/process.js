@@ -63,8 +63,6 @@ class ProcessService {
           : {};
     }
 
-    console.log('jkdkjsd', flowStages);
-
     if (!flowStages.length) {
       return res.status(404).json({ error: 'Não há etapas neste fluxo' });
     }
@@ -82,13 +80,11 @@ class ProcessService {
       ...startingProcess,
     };
 
-    console.log(req.body);
-    console.log(newData);
-    console.log(originalProcess);
-
     Object.keys(newData).forEach(
       k => originalProcess[k] === newData[k] && delete newData[k],
     );
+
+    if (Object.keys(newData).length === 0) return true;
 
     return await this.executeUpdateQuery(idProcess, newData, req);
   }
@@ -130,7 +126,6 @@ class ProcessService {
           (flowStage.idStageA === from && flowStage.idStageB === to) ||
           (flowStage.idStageB === from && flowStage.idStageA === to)
         ) {
-          console.log('to aqui hihi');
           canAdvance = true;
           break;
         }
