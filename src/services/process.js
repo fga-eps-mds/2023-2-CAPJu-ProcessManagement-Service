@@ -103,24 +103,24 @@ class ProcessService {
     }
   }
 
-  async updateProcessStage(req, res) {
-    const { idProcess, from, to, idFlow } = req.body;
+  async updateProcessStage(req) {
+    const { idProcess, from, to, idFlow, record } = req.body;
 
     if (
       isNaN(parseInt(from)) ||
       isNaN(parseInt(to)) ||
       isNaN(parseInt(idFlow))
     ) {
-      return res.status(400).json({
-        error: 'Identificadores inválidos',
+      throw {
+        status: 400,
         message: `Identificadores '${idFlow}', '${from}', ou '${to}' são inválidos`,
-      });
+      };
     }
     const flowStages = await this.flowStageService.findAllByIdFlow(idFlow);
 
     let canAdvance = false;
 
-    if (flowStages?.length > 0) {
+    if (flowStages?.length) {
       for (const flowStage of flowStages) {
         if (
           (flowStage.idStageA === from && flowStage.idStageB === to) ||
@@ -133,10 +133,29 @@ class ProcessService {
     }
 
     if (!canAdvance) {
-      return res.status(409).json({
-        error: 'Transição impossível',
+      throw {
+        status: 409,
         message: `Não há a transição da etapa '${to}' para '${from}' no fluxo '${idFlow}'`,
-      });
+      };
+    }
+
+    const idExistingProcess = await this.process.findOne({
+      where: {
+        idStage: to,
+        record,
+        idProcess: {
+          [Op.ne]: idProcess,
+        },
+      },
+      attributes: ['idProcess'],
+      raw: true,
+    });
+
+    if (idExistingProcess) {
+      throw {
+        status: 409,
+        message: 'Já há outro processo com o mesmo número na etapa solicitada.',
+      };
     }
 
     return this.executeUpdateQuery(

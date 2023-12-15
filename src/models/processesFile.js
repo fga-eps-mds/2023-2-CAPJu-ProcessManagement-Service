@@ -48,10 +48,6 @@ class ProcessesFileModel extends Model {
           type: DataTypes.BLOB,
           allowNull: false,
         },
-        dataResultingFile: {
-          type: DataTypes.BLOB,
-          allowNull: true,
-        },
       },
       {
         sequelize,

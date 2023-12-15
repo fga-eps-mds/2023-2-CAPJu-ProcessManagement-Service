@@ -1,0 +1,5 @@
+DO NOT DELETE THIS FOLDER!!!
+
+If, for any reason, the fs.unlink() function within "convertCsvBufferToXlsx"
+fails to operate and a multitude of files accumulate here, you are welcome
+to delete these files. However, please ensure that the folder itself is retained.

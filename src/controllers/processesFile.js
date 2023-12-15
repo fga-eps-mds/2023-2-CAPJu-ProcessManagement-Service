@@ -69,10 +69,10 @@ export class ProcessesFileController {
 
       const newData = req.body;
 
-      await this.processesFileService.updateFileItem(
-        idProcessesFileItem,
-        newData,
-      );
+      await this.processesFileService.updateFileItem(idProcessesFileItem, {
+        ...newData,
+        message: null,
+      });
 
       return res.status(200).json({ idProcessesFileItem });
     } catch (error) {
@@ -140,6 +140,21 @@ export class ProcessesFileController {
       return res.status(500).json({
         error: `${error}`,
         message: `Erro ao salvar remessa de processos`,
+      });
+    }
+  };
+
+  generateResultingFile = async (req, res) => {
+    try {
+      const { idProcessesFile } = req.params;
+      const data = await this.processesFileService.generateResultingFile(
+        idProcessesFile,
+      );
+      return res.status(200).json(data);
+    } catch (error) {
+      return res.status(500).json({
+        error: `${error}`,
+        message: `Erro ao gerar arquivo resultado.`,
       });
     }
   };
