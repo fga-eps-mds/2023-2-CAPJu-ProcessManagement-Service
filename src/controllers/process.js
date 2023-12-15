@@ -399,7 +399,9 @@ export class ProcessController {
         });
       }
     } catch (error) {
-      return res.status(500).json({ error: `${error}` });
+      const status = error.status || 500;
+      const message = error.message || 'Erro ao atualizar etapa.';
+      return res.status(status).json({ error: message });
     }
   };
 

@@ -10,6 +10,7 @@ import path from 'path';
 import { convertCsvToXlsx } from '@aternus/csv-to-xlsx';
 import { logger } from '../utils/logger.js';
 import sequelizeConfig from '../config/sequelize.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const validProcessesHeader = [
   'Número processo',
@@ -206,7 +207,7 @@ export class ProcessesFileService {
     });
   };
 
-  executeJob = async () => {
+  imporFilesJob = async () => {
     // logic based on the assumption that the files will be small.
     const files = await this.repository.findAll({
       where: { status: 'waiting' },
@@ -686,14 +687,17 @@ export class ProcessesFileService {
     fileName.split('.').pop().toLowerCase();
 
   convertCsvBufferToXlsx = async (dataOriginalFile, originalFileName) => {
-    const relativePath = './data';
+    const relativePath = './tempImportationFiles';
 
-    const tempCsvFilePath = path.join(relativePath, originalFileName);
+    const uniqueId = uuidv4().split('-')[0];
+
+    const tempCsvFileName = uniqueId + '_' + originalFileName;
+    const tempCsvFilePath = path.join(relativePath, tempCsvFileName);
     const tempXlsxFilePath = tempCsvFilePath.replace('.csv', '.xlsx');
 
     await fs.writeFile(tempCsvFilePath, dataOriginalFile);
 
-    convertCsvToXlsx(tempCsvFilePath, tempXlsxFilePath);
+    await convertCsvToXlsx(tempCsvFilePath, tempXlsxFilePath);
 
     const xlsxBuffer = await fs.readFile(tempXlsxFilePath);
 
