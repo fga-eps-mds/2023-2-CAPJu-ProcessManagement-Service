@@ -106,8 +106,6 @@ export class ProcessesFileController {
   deleteById = async (req, res) => {
     const { idProcessesFile } = req.params;
 
-    console.log(idProcessesFile);
-
     try {
       const result = await this.processesFileService.deleteFileById(
         idProcessesFile,

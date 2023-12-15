@@ -80,10 +80,6 @@ class ProcessService {
       ...startingProcess,
     };
 
-    console.log(req.body);
-    console.log(newData);
-    console.log(originalProcess);
-
     Object.keys(newData).forEach(
       k => originalProcess[k] === newData[k] && delete newData[k],
     );
@@ -130,7 +126,6 @@ class ProcessService {
           (flowStage.idStageA === from && flowStage.idStageB === to) ||
           (flowStage.idStageB === from && flowStage.idStageA === to)
         ) {
-          console.log('to aqui hihi');
           canAdvance = true;
           break;
         }
