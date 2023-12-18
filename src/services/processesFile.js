@@ -165,8 +165,6 @@ export class ProcessesFileService {
   };
 
   createFile = async data => {
-    data.fileName = this.getFormattedFileName(data.fileName);
-
     return (({ idProcessesFile, status }) => ({
       idProcessesFile,
       status,
@@ -379,11 +377,6 @@ export class ProcessesFileService {
             key: 'processHeaderIndex',
           },
           {
-            headers: validNicknamesHeader,
-            errorMessage: 'Coluna apelidos não encontrada',
-            key: 'nicknamesHeaderIndex',
-          },
-          {
             headers: validFlowsHeader,
             errorMessage: 'Coluna fluxos não encontrada',
             key: 'flowsHeaderIndex',
@@ -440,12 +433,12 @@ export class ProcessesFileService {
             const record = sheetDataMap.get(headerIndexes.processHeaderIndex)[
               rowIndex
             ];
-            const nickname = sheetDataMap.get(
-              headerIndexes.nicknamesHeaderIndex,
-            )[rowIndex];
             const flow = sheetDataMap.get(headerIndexes.flowsHeaderIndex)[
               rowIndex
             ];
+            const nickname = sheetDataMap
+              .get(headerIndexes.nicknamesHeaderIndex)
+              ?.at(rowIndex);
             const priority = sheetDataMap
               .get(headerIndexes.prioritiesHeaderIndex)
               ?.at(rowIndex);
@@ -459,7 +452,9 @@ export class ProcessesFileService {
               rowIndex,
             };
 
-            processesFileItems.push(fileItem);
+            if (record || flow || nickname || priority) {
+              processesFileItems.push(fileItem);
+            }
 
             rowIndex++;
           }
@@ -488,14 +483,13 @@ export class ProcessesFileService {
 
             const process = {};
 
-            const mandatoryNonEmptyFields = [
+            const mandatoryEmptyFields = [
               { name: 'Número processo', key: 'record' },
               { name: 'Fluxo', key: 'flow' },
-              { name: 'Apelido', key: 'nickname' },
             ].filter(field => !fileItem[field.key]);
 
-            if (mandatoryNonEmptyFields.length) {
-              mandatoryNonEmptyFields.forEach(
+            if (mandatoryEmptyFields.length) {
+              mandatoryEmptyFields.forEach(
                 emptyField =>
                   (message = message.concat(`${emptyField.name} vazio \n`)),
               );
@@ -654,10 +648,13 @@ export class ProcessesFileService {
     return maxContentLengths;
   };
 
-  getFormattedFileName = fileName => {
-    let formattedName = fileName.replace(/ /g, '_');
-    formattedName = formattedName.replace(/[^a-zA-Z0-9_\-.]/g, '');
-    return formattedName;
+  getFormattedFileName = (fileName, extension) => {
+    let formattedName = fileName
+      .replace(/ /g, '_')
+      .replace(/[^a-zA-Z0-9_\-.]/g, '');
+    return extension
+      ? formattedName.replace(/\.[^/.]+$/, `.${extension}`)
+      : formattedName;
   };
 
   getPriorityIdByDescriptionOrAbbreviation = str => {

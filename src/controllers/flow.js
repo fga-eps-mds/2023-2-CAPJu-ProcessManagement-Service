@@ -3,7 +3,6 @@ import axios from 'axios';
 import services from '../services/_index.js';
 import { userFromReq } from '../../middleware/authMiddleware.js';
 import { filterByName } from '../utils/filters.js';
-import models from '../models/_index.js';
 import sequelize from '../config/sequelize.js';
 import { QueryTypes } from 'sequelize';
 
@@ -14,7 +13,6 @@ export class FlowController {
     this.flowStageService = services.flowStageService;
     this.flowUserService = services.flowUserService;
     this.processService = services.processService;
-    this.processesFileItemRepository = models.ProcessesFileItem;
   }
 
   index = async (req, res) => {
@@ -54,7 +52,7 @@ export class FlowController {
 
         const flowSequence = {
           idFlow: flow.idFlow,
-          name: flow.name,
+          name: flow.name.trim(),
           idUnit: flow.idUnit,
           stages,
           sequences,
@@ -309,7 +307,10 @@ export class FlowController {
           });
       }
 
-      const flow = await this.flowService.createFlow({ name, idUnit });
+      const flow = await this.flowService.createFlow({
+        name: name.trim(),
+        idUnit,
+      });
 
       for (const sequence of sequences) {
         const data = {

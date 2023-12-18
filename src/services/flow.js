@@ -53,7 +53,7 @@ class FlowService {
 
   async updateFlow(name, idFlow) {
     const [updatedRows] = await this.flow.update(
-      { name },
+      { name: name.trim() },
       { where: { idFlow } },
     );
     if (updatedRows) {
