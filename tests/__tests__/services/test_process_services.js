@@ -1,5 +1,7 @@
 import services from '../../../src/services/_index';
-import ProcessService from '../../../src/services/process';
+import ProcessService, { validateRecord } from '../../../src/services/process';
+import ProcessAudService from '../../../src/services/processAudService';
+import { Op } from 'sequelize';
 
 const ProcessAudModel = {
   create: jest.fn(),
