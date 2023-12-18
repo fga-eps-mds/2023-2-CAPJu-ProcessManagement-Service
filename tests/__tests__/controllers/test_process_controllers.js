@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import axios from 'axios';
 import { ProcessController } from '../../../src/controllers/process';
-import * as middleware from '../../../middleware/authMiddleware';
 
 jest.mock('axios');
 
