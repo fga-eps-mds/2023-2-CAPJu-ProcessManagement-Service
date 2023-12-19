@@ -11,7 +11,7 @@ import { convertCsvToXlsx } from '@aternus/csv-to-xlsx';
 import { logger } from '../utils/logger.js';
 import sequelizeConfig from '../config/sequelize.js';
 import { v4 as uuidv4 } from 'uuid';
-import { formatDateTimeToBrazilian } from '../utils/date.js';
+import moment from 'moment-timezone';
 
 const validProcessesHeader = [
   'Número processo',
@@ -247,8 +247,8 @@ export class ProcessesFileService {
         {
           v: `RESULTADO IMPORTAÇÃO\n\nLote: ${
             fileInfo.name
-          }\nData Importação: ${formatDateTimeToBrazilian(
-            fileInfo.importedAt,
+          }\nData Importação: ${moment(fileInfo.importedAt).format(
+            'DD/MM/YYYY HH:mm:ss',
           )}\nImportados: ${quantityImported}\nErro: ${quantityWithError}`,
           t: 's',
           s: { alignment: { wrapText: true, horizontal: 'center' } },
@@ -312,7 +312,7 @@ export class ProcessesFileService {
     return outputFile;
   };
 
-  imporFilesJob = async () => {
+  importFilesJob = async () => {
     // logic based on the assumption that the files will be small.
     const files = await this.repository.findAll({
       where: { status: 'waiting' },
@@ -333,7 +333,7 @@ export class ProcessesFileService {
 
     await this.repository.update(
       { status: 'inProgress' },
-      { where: { idProcessesFile }, returning: false },
+      { where: { idProcessesFile }, returning: false, logging: false },
     );
 
     for (const file of files) {
@@ -405,6 +405,13 @@ export class ProcessesFileService {
         );
         if (prioritesIndex !== -1) {
           headerIndexes.prioritiesHeaderIndex = prioritesIndex;
+        }
+
+        const nicknameIndex = header.findIndex(h =>
+          validNicknamesHeader.includes(h),
+        );
+        if (nicknameIndex !== -1) {
+          headerIndexes.nicknamesHeaderIndex = nicknameIndex;
         }
 
         for (const worksheet of workbook) {
@@ -576,7 +583,7 @@ export class ProcessesFileService {
                 operation: 'INSERT',
                 changedBy: file.importedBy,
                 newValues: JSON.stringify(process),
-                changedAt: new Date(),
+                changedAt: moment().tz('America/Sao_Paulo'),
                 remarks: null,
                 oldValues: null,
               });
@@ -597,7 +604,11 @@ export class ProcessesFileService {
               { transaction, returning: false, logging: false },
             );
             await this.repository.update(
-              { status: 'imported', message: null, importedAt: new Date() },
+              {
+                status: 'imported',
+                message: null,
+                importedAt: moment().tz('America/Sao_Paulo'),
+              },
               { where: { idProcessesFile: file.idProcessesFile } },
               { transaction, returning: false, logging: false },
             );

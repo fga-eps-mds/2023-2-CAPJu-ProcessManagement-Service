@@ -7,6 +7,7 @@ import StageService from './stage.js';
 import ProcessService from './process.js';
 import XLSX from 'xlsx-js-style';
 import { formatDateTimeToBrazilian } from '../utils/date.js';
+import moment from 'moment-timezone';
 
 class ProcessAud {
   constructor(ProcessAudModel) {
@@ -41,7 +42,7 @@ class ProcessAud {
       changedBy: (await userFromReq(req)).cpf,
       oldValues: null,
       newValues: newValues ? JSON.stringify(newValues) : null,
-      changedAt: new Date(),
+      changedAt: moment().tz('America/Sao_Paulo'),
       remarks: null,
     };
 
@@ -131,9 +132,9 @@ class ProcessAud {
       models.Process,
     ).getProcessRecordById(idProcess);
 
-    const currentDate = new Date();
-
-    const currentDateFormatted = formatDateTimeToBrazilian(currentDate);
+    const currentDateFormatted = moment()
+      .tz('America/Sao_Paulo')
+      .format('DD/MM/YYYY HH:mm:ss');
 
     const user = await userFromReq(req);
 

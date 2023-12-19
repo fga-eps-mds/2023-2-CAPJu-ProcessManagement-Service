@@ -3,6 +3,7 @@ import models from '../models/_index.js';
 import { Op } from 'sequelize';
 import FlowStageService from './flowStage.js';
 import sequelizeConfig from '../config/sequelize.js';
+import moment from 'moment-timezone';
 
 class ProcessService {
   constructor(ProcessModel) {
@@ -61,7 +62,7 @@ class ProcessService {
         req.body.status === 'inProgress'
           ? {
               idStage: flowStages[0].idStageA || originalProcess.idStage,
-              effectiveDate: new Date(),
+              effectiveDate: moment().tz('America/Sao_Paulo'),
               status: 'inProgress',
             }
           : {};
@@ -79,7 +80,7 @@ class ProcessService {
     const newData = {
       ...(idFlow && { idFlow: Number(idFlow) }),
       ...(idPriority && { idPriority: Number(idPriority) }),
-      ...(nickname && { nickname: nickname?.trim() }),
+      ...(nickname && { nickname: nickname?.trim() || null }),
       ...(status && { status }),
       ...startingProcess,
     };
@@ -175,7 +176,7 @@ class ProcessService {
 
     return this.executeUpdateQuery(
       idProcess,
-      { idStage: to, effectiveDate: new Date() },
+      { idStage: to, effectiveDate: moment().tz('America/Sao_Paulo') },
       req,
     );
   }

@@ -32,7 +32,7 @@ const processesFileService = services.processesFileService;
 
 cron.schedule(CRON_PATTERN, async () => {
   logger.info('Iniciando rotina de importação de processos');
-  await processesFileService.imporFilesJob();
+  await processesFileService.importFilesJob();
 });
 
 app.listen(port, () => {
