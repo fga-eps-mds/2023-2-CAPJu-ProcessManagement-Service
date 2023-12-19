@@ -38,16 +38,43 @@ export class ProcessesFileController {
 
       const { name } = req.body;
 
-      const { name: fileName, data: dataOriginalFile } = req.files.file;
+      const validFileTypes = [
+        {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          extension: 'xlsx',
+        },
+        { type: 'application/vnd.ms-excel', extension: 'xls' },
+        { type: 'text/csv', extension: 'csv' },
+        { type: 'application/csv', extension: 'csv' },
+      ];
+
+      const {
+        name: fileName,
+        data: dataOriginalFile,
+        mimetype,
+      } = req.files.file;
 
       if (!fileName || !dataOriginalFile) {
-        return res.status(500).json({ message: `Arquivo não inserido` });
+        return res.status(400).json({ message: `Arquivo não inserido.` });
+      }
+
+      const fileType = validFileTypes.find(
+        validFileType => validFileType.type === mimetype,
+      );
+
+      if (!fileType) {
+        return res
+          .status(415)
+          .json({ message: `Formato de arquivo inválido.` });
       }
 
       const data = await this.processesFileService.createFile({
         importedBy,
         dataOriginalFile,
-        fileName,
+        fileName: this.processesFileService.getFormattedFileName(
+          fileName,
+          fileType.extension,
+        ),
         name,
         status: 'waiting',
       });

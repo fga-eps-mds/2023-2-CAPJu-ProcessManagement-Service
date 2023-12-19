@@ -8,7 +8,7 @@ import ProcessService from './process.js';
 import XLSX from 'xlsx-js-style';
 import { formatDateTimeToBrazilian } from '../utils/date.js';
 
-class ProcessAudService {
+class ProcessAud {
   constructor(ProcessAudModel) {
     this.processAudRepository = ProcessAudModel;
     this.flowService = new FlowService(models.Flow);
@@ -18,12 +18,21 @@ class ProcessAudService {
     this.documentAudRepository = models.DocumentAud;
   }
 
-  async create(idProcess, newValues, operation, req, transaction = null) {
+  async create(
+    idProcess,
+    newValues,
+    operation,
+    req,
+    transaction = null,
+    record = null,
+  ) {
     // For memory and logic purposes, the "newValues" param should only receive the fields that changed.
-
-    const processRecord = await new ProcessService(
-      models.Process,
-    ).getProcessRecordById(idProcess);
+    let processRecord = record || newValues.record;
+    if (!processRecord) {
+      processRecord = await new ProcessService(
+        models.Process,
+      ).getProcessRecordById(idProcess);
+    }
 
     const auditEntry = {
       idProcess,
@@ -318,4 +327,4 @@ class ProcessAudService {
   }
 }
 
-export default ProcessAudService;
+export default ProcessAud;

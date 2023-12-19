@@ -1,4 +1,4 @@
-import ProcessAudService from './processAudService.js';
+import ProcessAud from './processAud.js';
 import models from '../models/_index.js';
 import { Op } from 'sequelize';
 import FlowStageService from './flowStage.js';
@@ -7,20 +7,24 @@ import sequelizeConfig from '../config/sequelize.js';
 class ProcessService {
   constructor(ProcessModel) {
     this.process = ProcessModel;
-    this.processAud = new ProcessAudService(models.ProcessAud);
+    this.processAud = new ProcessAud(models.ProcessAud);
     this.flowStageService = new FlowStageService(models.FlowStage);
     this.noteRepository = models.Note;
     this.processesFileItemRepository = models.ProcessesFileItem;
   }
 
   async createProcessAndAud(process, req) {
-    const createdProcess = await this.process.create(process);
-    await this.processAud.create(
-      createdProcess.idProcess,
-      createdProcess,
-      'INSERT',
-      req,
-    );
+    let createdProcess;
+    await sequelizeConfig.transaction(async transaction => {
+      createdProcess = await this.process.create(process, { transaction });
+      await this.processAud.create(
+        createdProcess.idProcess,
+        createdProcess,
+        'INSERT',
+        req,
+        transaction,
+      );
+    });
     return createdProcess;
   }
 
@@ -73,9 +77,9 @@ class ProcessService {
     }
 
     const newData = {
-      ...(idFlow && { idFlow }),
-      ...(nickname && { nickname }),
-      ...(idPriority && { idPriority }),
+      ...(idFlow && { idFlow: Number(idFlow) }),
+      ...(idPriority && { idPriority: Number(idPriority) }),
+      ...(nickname && { nickname: nickname?.trim() }),
       ...(status && { status }),
       ...startingProcess,
     };
@@ -91,11 +95,22 @@ class ProcessService {
 
   async executeUpdateQuery(idProcess, newData, req) {
     // newData param should receive only the modified fields
-    const [updateCount, updatedEntities] = await this.process.update(newData, {
-      where: { idProcess },
-      returning: true,
+    let updateCount = 0;
+    let updatedEntities = [];
+    await sequelizeConfig.transaction(async transaction => {
+      [updateCount, updatedEntities] = await this.process.update(newData, {
+        where: { idProcess },
+        returning: true,
+        transaction,
+      });
+      await this.processAud.create(
+        idProcess,
+        newData,
+        'UPDATE',
+        req,
+        transaction,
+      );
     });
-    await this.processAud.create(idProcess, newData, 'UPDATE', req);
     if (updateCount > 0) {
       return updatedEntities[0];
     } else {
@@ -187,11 +202,12 @@ class ProcessService {
     return await this.process.destroy({ where: { record } });
   }
 
-  async getProcessById(idProcess, attributes) {
+  async getProcessById(idProcess, attributes, transaction = null) {
     return await this.process.findOne({
       where: { idProcess },
       attributes: attributes?.length ? attributes : undefined,
       raw: true,
+      ...(transaction && { transaction }),
     });
   }
 
@@ -199,7 +215,7 @@ class ProcessService {
     return (await this.getProcessById(idProcess, ['record']))?.record;
   }
 
-  async deleteProcessById(idProcess) {
+  async deleteProcessById(idProcess, req) {
     let result;
 
     await sequelizeConfig.transaction(async transaction => {
@@ -208,10 +224,19 @@ class ProcessService {
         where: { idProcess },
         transaction,
       });
-      await this.processAud.delete({
-        where: { idProcess },
+      const { record } = await this.getProcessById(
+        idProcess,
+        ['record'],
         transaction,
-      });
+      );
+      await this.processAud.create(
+        idProcess,
+        null,
+        'DELETE',
+        req,
+        transaction,
+        record,
+      );
       result = await this.process.destroy({
         where: { idProcess },
         transaction,

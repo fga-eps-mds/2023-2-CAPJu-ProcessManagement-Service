@@ -1,6 +1,6 @@
 import services from '../../../src/services/_index';
 import ProcessService, { validateRecord } from '../../../src/services/process';
-import ProcessAudService from '../../../src/services/processAudService';
+import ProcessAud from '../../../src/services/processAud.js';
 import { Op } from 'sequelize';
 
 const ProcessAudModel = {
