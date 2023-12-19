@@ -312,7 +312,7 @@ export class ProcessController {
             {
               record,
               idUnit: flow.idUnit,
-              nickname: nickname?.trim(),
+              nickname: nickname?.trim() || null,
               idFlow,
               idPriority,
               finalised: false,

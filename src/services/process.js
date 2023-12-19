@@ -79,7 +79,7 @@ class ProcessService {
     const newData = {
       ...(idFlow && { idFlow: Number(idFlow) }),
       ...(idPriority && { idPriority: Number(idPriority) }),
-      ...(nickname && { nickname: nickname?.trim() }),
+      ...(nickname && { nickname: nickname?.trim() || null }),
       ...(status && { status }),
       ...startingProcess,
     };
