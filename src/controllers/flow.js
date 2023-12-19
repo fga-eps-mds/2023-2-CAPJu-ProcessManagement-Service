@@ -355,13 +355,13 @@ export class FlowController {
 
         for (const cpf of idUsersToNotify) {
           const user = await axios.get(
-            `${process.env.USER_URL_API}/${cpf}/unit/${idUnit}`,
+            `${process.env.USER_URL_API}/${cpf}/unit/${flow.idUnit}'`,
             { headers: { Authorization: req.headers.authorization } },
           );
 
           if (!user.data) {
             return res.status(404).json({
-              message: `Usuário '${cpf}' não existe na unidade '${idUnit}'`,
+              message: `Usuário '${cpf}' não existe na unidade '${flow.idUnit}''`,
             });
           }
         }
@@ -406,7 +406,7 @@ export class FlowController {
         return res.status(200).json({
           idFlow: updatedFlow.idFlow,
           name: updatedFlow.name,
-          idUnit: idUnit,
+          idUnit: updatedFlow.idUnit,
           sequences,
           usersToNotify: idUsersToNotify,
         });
