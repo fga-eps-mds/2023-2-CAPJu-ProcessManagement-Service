@@ -5,6 +5,7 @@ import sequelizeConfig from '../src/config/sequelize.js';
 import UserEndpointAccessLogModel from '../src/models/userEndpointAccessLog.js';
 import routesPermissions from '../src/routes/routesPermissions.js';
 import services from '../src/services/_index.js';
+import moment from 'moment-timezone';
 
 const publicEndpoints = [
   /**
@@ -169,7 +170,7 @@ async function registerEndpointLogEvent({ req, isAccepted, message }) {
     await UserEndpointAccessLogModel.create({
       endpoint: req.originalUrl,
       httpVerb: req.method,
-      attemptTimestamp: new Date(),
+      attemptTimestamp: moment().tz('America/Sao_Paulo'),
       userCPF,
       isAccepted,
       message,

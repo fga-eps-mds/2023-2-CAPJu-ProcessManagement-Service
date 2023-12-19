@@ -1,5 +1,6 @@
 import services from '../services/_index.js';
 import { userFromReq } from '../../middleware/authMiddleware.js';
+import moment from 'moment-timezone';
 
 export class ProcessesFileController {
   constructor() {
@@ -11,7 +12,6 @@ export class ProcessesFileController {
       const data = await this.processesFileService.findAllPaged(req, res);
       return res.status(200).json(data);
     } catch (error) {
-      console.log(error);
       return res
         .status(500)
         .json({ error: `${error}`, message: `Erro ao buscar arquivos` });
@@ -77,6 +77,7 @@ export class ProcessesFileController {
         ),
         name,
         status: 'waiting',
+        createdAt: moment().tz('America/Sao_Paulo'),
       });
 
       return res
@@ -151,23 +152,6 @@ export class ProcessesFileController {
       return res
         .status(500)
         .json({ error, message: `Erro ao apagar arquivo: ${error}` });
-    }
-  };
-
-  findById = async (req, res) => {
-    try {
-      const { idProcessesFile } = req.params;
-
-      await this.processesFileService.findById(idProcessesFile);
-
-      return res
-        .status(200)
-        .json({ message: `Arquivo cadastrado com sucesso` });
-    } catch (error) {
-      return res.status(500).json({
-        error: `${error}`,
-        message: `Erro ao salvar remessa de processos`,
-      });
     }
   };
 
