@@ -452,7 +452,7 @@ export class ProcessesFileService {
 
             const fileItem = {
               record,
-              flow,
+              flow: typeof flow === 'number' ? flow.toString() : flow,
               nickname,
               priority,
               idProcessesFile: file.idProcessesFile,
@@ -474,7 +474,7 @@ export class ProcessesFileService {
             {
               name: Array.from(
                 new Set(sheetDataMap.get(headerIndexes.flowsHeaderIndex)),
-              ),
+              ).map(f => (typeof f === 'number' ? f.toString() : f)),
             },
             ['idFlow', 'idUnit', 'name'],
           );
